@@ -194,10 +194,8 @@ air conditioner
 amusement park
 ancient temple
 angry bird
-arcade machine
 armchair
-baby carriage
-balance scale
+scale
 bank vault
 barbecue
 basketball hoop
@@ -249,7 +247,7 @@ fire extinguisher
 fishing rod
 flower pot
 food truck
-football stadium
+football
 fountain pen
 garden hose
 gas station
@@ -268,7 +266,6 @@ high heels
 hot air balloon
 ice cube
 ice skating
-jigsaw puzzle
 juice box
 keyboard
 king crown
@@ -280,13 +277,12 @@ life jacket
 lightning bolt
 magic wand
 magnifying glass
-mail truck
-maze
-medicine bottle
+mail
+medicine
 microscope
 milk carton
 mountain bike
-movie camera
+camera
 music note
 night sky
 paint brush
@@ -323,7 +319,6 @@ table lamp
 tea cup
 tennis racket
 traffic light
-treasure chest
 tree house
 video game
 washing machine
@@ -334,15 +329,13 @@ wheelchair
 wind turbine
 wizard hat
 wooden bridge
-abandoned house
-ancient pyramid
+pyramid
 asteroid
 avalanche
 battleship
 blender
 boomerang
 bulldozer
-camouflage
 canyon
 catapult
 chameleon
@@ -357,19 +350,15 @@ escalator
 fireworks
 fossil
 galaxy
-geyser
 glacier
 gorilla
 greenhouse
 harbor
-hedgehog
 hourglass
 hurricane
 igloo
-jelly bean
 lighthouse
 meteor
-meteorite
 mummy
 ninja
 observatory
@@ -401,7 +390,7 @@ artificial intelligence
 battery
 circuit board
 computer mouse
-computer virus
+virus
 controller
 database
 drone
@@ -424,7 +413,6 @@ solar system
 spacesuit
 tablet
 usb drive
-virtual reality
 wifi router
 archer
 blacksmith
@@ -465,8 +453,6 @@ cooking
 crying
 dancing
 diving
-dreaming
-drinking
 driving
 fishing
 flying
@@ -474,10 +460,7 @@ juggling
 jumping
 laughing
 painting
-reading
-running
 singing
-skating
 sleeping
 sneezing
 swimming
@@ -518,7 +501,6 @@ mermaid
 monster
 mummy
 space station
-software update
 robot
 solar eclipse
 solar system
