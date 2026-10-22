@@ -104,7 +104,7 @@ public class ConnectionService {
             } catch (RuntimeException ignored) {
                 // Room/player may already have been removed.
             }
-        }, 5, TimeUnit.SECONDS);
+        }, 2, TimeUnit.MINUTES);
         pendingDisconnects.put(key, future);
     }
 
