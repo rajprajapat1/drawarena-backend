@@ -407,7 +407,7 @@ public class RoomService {
         }
 
         if (room.getWordSelectionEndTime() <= 0) {
-            room.setWordSelectionEndTime(System.currentTimeMillis() + 5000);
+            room.setWordSelectionEndTime(System.currentTimeMillis() + 10_000);
             saveRoom(room);
         }
 
