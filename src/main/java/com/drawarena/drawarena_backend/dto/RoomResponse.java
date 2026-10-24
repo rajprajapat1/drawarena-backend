@@ -50,4 +50,6 @@ public class RoomResponse {
     private int eligibleGuesserCount;
 
     private List<String> correctGuesserIds;
+
+    private long serverTime;
 }

@@ -189,17 +189,17 @@ public class RoomService {
     }
 
     public Room getRoom(String roomId) {
-    String normalizedRoomId = requireNormalizedRoomId(roomId);
-    requireRoom(normalizedRoomId);
+        String normalizedRoomId = requireNormalizedRoomId(roomId);
+        requireRoom(normalizedRoomId);
 
-    synchronized (getRoomLock(normalizedRoomId)) {
-        Room room = rooms.get(normalizedRoomId);
-        if (room == null) {
-            throw new RuntimeException("Room not found with ID: " + roomId);
+        synchronized (getRoomLock(normalizedRoomId)) {
+            Room room = rooms.get(normalizedRoomId);
+            if (room == null) {
+                throw new RuntimeException("Room not found with ID: " + roomId);
+            }
+            return room;
         }
-        return room;
     }
-}
 
     public Room startGame(String roomId, StartGameRequest request) {
 
@@ -234,33 +234,32 @@ public class RoomService {
     }
 
     private void startCountdown(String roomId) {
-    Room room = getRoomFromStorage(roomId);
+        Room room = getRoomFromStorage(roomId);
 
-    if (room == null) {
-        return;
-    }
-
-    long delay = Math.max(0, room.getCountdownEndTime() - System.currentTimeMillis()
-    );
-
-    scheduler.schedule(() -> {
-        Room existingRoom = getRoomFromStorage(roomId);
-
-        if (existingRoom == null) {
+        if (room == null) {
             return;
         }
 
-        synchronized (getRoomLock(roomId)) {
-            Room currentRoom = rooms.get(roomId);
+        long delay = Math.max(0, room.getCountdownEndTime() - System.currentTimeMillis());
 
-            if (currentRoom == null || currentRoom.getGameState() != GameState.STARTING) {
+        scheduler.schedule(() -> {
+            Room existingRoom = getRoomFromStorage(roomId);
+
+            if (existingRoom == null) {
                 return;
             }
 
-            initializeRoundOne(currentRoom);
-        }
-    }, delay, TimeUnit.MILLISECONDS);
-}
+            synchronized (getRoomLock(roomId)) {
+                Room currentRoom = rooms.get(roomId);
+
+                if (currentRoom == null || currentRoom.getGameState() != GameState.STARTING) {
+                    return;
+                }
+
+                initializeRoundOne(currentRoom);
+            }
+        }, delay, TimeUnit.MILLISECONDS);
+    }
 
     public void initializeRoundOne(Room room) {
         room.setCurrentRound(1);
@@ -401,64 +400,64 @@ public class RoomService {
     }
 
     private void startWordSelectionTimer(String roomId) {
-    Room room = getRoomFromStorage(roomId);
+        Room room = getRoomFromStorage(roomId);
 
-    if (room == null) {
-        return;
-    }
-
-    if (room.getWordSelectionEndTime() <= 0) {
-        room.setWordSelectionEndTime(System.currentTimeMillis() + 5000);
-        saveRoom(room);
-    }
-
-    String expectedDrawerId = room.getCurrentDrawerId();
-    int expectedTurnIndex = room.getCurrentTurnIndex();
-    int expectedRound = room.getCurrentRound();
-    long expectedEndTime = room.getWordSelectionEndTime();
-
-    long delay = Math.max(0, expectedEndTime - System.currentTimeMillis());
-
-    scheduler.schedule(() -> {
-        Room existingRoom = getRoomFromStorage(roomId);
-
-        if (existingRoom == null) {
+        if (room == null) {
             return;
         }
 
-        synchronized (getRoomLock(roomId)) {
-            Room currentRoom = rooms.get(roomId);
-
-            if (currentRoom == null
-                    || currentRoom.getTurnPhase() != TurnPhase.WORD_SELECTION) {
-                return;
-            }
-
-            if (currentRoom.getCurrentDrawerId() == null
-                    || !currentRoom.getCurrentDrawerId().equals(expectedDrawerId)) {
-                return;
-            }
-
-            if (currentRoom.getCurrentTurnIndex() != expectedTurnIndex
-                    || currentRoom.getCurrentRound() != expectedRound) {
-                return;
-            }
-
-            if (currentRoom.getWordSelectionEndTime() != expectedEndTime) {
-                return;
-            }
-
-            currentRoom.setWordSelectionEndTime(0);
-            autoSelectWord(currentRoom);
+        if (room.getWordSelectionEndTime() <= 0) {
+            room.setWordSelectionEndTime(System.currentTimeMillis() + 5000);
+            saveRoom(room);
         }
-    }, delay, TimeUnit.MILLISECONDS);
-}
+
+        String expectedDrawerId = room.getCurrentDrawerId();
+        int expectedTurnIndex = room.getCurrentTurnIndex();
+        int expectedRound = room.getCurrentRound();
+        long expectedEndTime = room.getWordSelectionEndTime();
+
+        long delay = Math.max(0, expectedEndTime - System.currentTimeMillis());
+
+        scheduler.schedule(() -> {
+            Room existingRoom = getRoomFromStorage(roomId);
+
+            if (existingRoom == null) {
+                return;
+            }
+
+            synchronized (getRoomLock(roomId)) {
+                Room currentRoom = rooms.get(roomId);
+
+                if (currentRoom == null
+                        || currentRoom.getTurnPhase() != TurnPhase.WORD_SELECTION) {
+                    return;
+                }
+
+                if (currentRoom.getCurrentDrawerId() == null
+                        || !currentRoom.getCurrentDrawerId().equals(expectedDrawerId)) {
+                    return;
+                }
+
+                if (currentRoom.getCurrentTurnIndex() != expectedTurnIndex
+                        || currentRoom.getCurrentRound() != expectedRound) {
+                    return;
+                }
+
+                if (currentRoom.getWordSelectionEndTime() != expectedEndTime) {
+                    return;
+                }
+
+                currentRoom.setWordSelectionEndTime(0);
+                autoSelectWord(currentRoom);
+            }
+        }, delay, TimeUnit.MILLISECONDS);
+    }
 
     private void startDrawingPhase(Room room) {
         long startTime = System.currentTimeMillis();
         long durationMillis = room.getDrawTimeSeconds() * 1000L;
 
-            room.setWordSelectionEndTime(0);
+        room.setWordSelectionEndTime(0);
         room.setTurnStartTime(startTime);
         room.setTurnEndTime(startTime + durationMillis);
 
@@ -470,40 +469,41 @@ public class RoomService {
     }
 
     private void startDrawingTimer(Room room) {
-    String roomId = room.getRoomId();
-    String expectedDrawerId = room.getCurrentDrawerId();
-    long expectedStartTime = room.getTurnStartTime();
-    int expectedRound = room.getCurrentRound();
+        String roomId = room.getRoomId();
+        String expectedDrawerId = room.getCurrentDrawerId();
+        long expectedStartTime = room.getTurnStartTime();
+        int expectedRound = room.getCurrentRound();
 
-    long delay = Math.max(0, room.getTurnEndTime() - System.currentTimeMillis()
-    );
+        long delay = Math.max(0, room.getTurnEndTime() - System.currentTimeMillis());
 
-    scheduler.schedule(() -> {
-        Room existingRoom = getRoomFromStorage(roomId);
+        scheduler.schedule(() -> {
+            Room existingRoom = getRoomFromStorage(roomId);
 
-        if (existingRoom == null) {
-            return;
-        }
-
-        synchronized (getRoomLock(roomId)) {
-            Room currentRoom = rooms.get(roomId);
-
-            if (currentRoom == null || currentRoom.getTurnPhase() != TurnPhase.DRAWING) {
+            if (existingRoom == null) {
                 return;
             }
 
-            if (currentRoom.getCurrentDrawerId() == null || !currentRoom.getCurrentDrawerId().equals(expectedDrawerId)) {
-                return;
-            }
+            synchronized (getRoomLock(roomId)) {
+                Room currentRoom = rooms.get(roomId);
 
-            if (currentRoom.getTurnStartTime() != expectedStartTime || currentRoom.getCurrentRound() != expectedRound) {
-                return;
-            }
+                if (currentRoom == null || currentRoom.getTurnPhase() != TurnPhase.DRAWING) {
+                    return;
+                }
 
-            advanceToNextTurn(currentRoom);
-        }
-    }, delay, TimeUnit.MILLISECONDS);
-}
+                if (currentRoom.getCurrentDrawerId() == null
+                        || !currentRoom.getCurrentDrawerId().equals(expectedDrawerId)) {
+                    return;
+                }
+
+                if (currentRoom.getTurnStartTime() != expectedStartTime
+                        || currentRoom.getCurrentRound() != expectedRound) {
+                    return;
+                }
+
+                advanceToNextTurn(currentRoom);
+            }
+        }, delay, TimeUnit.MILLISECONDS);
+    }
 
     private void advanceToNextTurn(Room room) {
 
@@ -681,10 +681,10 @@ public class RoomService {
 
         String normalizedRoomId = requireNormalizedRoomId(roomId);
 
-     requireRoom(normalizedRoomId);
+        requireRoom(normalizedRoomId);
 
-    synchronized (getRoomLock(normalizedRoomId)) {
-        Room room = rooms.get(normalizedRoomId);
+        synchronized (getRoomLock(normalizedRoomId)) {
+            Room room = rooms.get(normalizedRoomId);
 
             if (room == null) {
                 throw new RuntimeException("Room not found");
@@ -790,7 +790,7 @@ public class RoomService {
 
         room.setTurnEndTime(
                 0);
-room.setWordSelectionEndTime(0);
+        room.setWordSelectionEndTime(0);
         broadcastCanvasClear(
                 room);
 
@@ -961,7 +961,7 @@ room.setWordSelectionEndTime(0);
 
         synchronized (requireRoomLock(room.getRoomId())) {
             RoomResponse response = new RoomResponse();
-
+            response.setServerTime(System.currentTimeMillis());
             response.setRoomId(room.getRoomId());
             response.setHostPlayerId(room.getHostPlayerId());
 
@@ -1140,7 +1140,7 @@ room.setWordSelectionEndTime(0);
 
         String roomId = requireNormalizedRoomId(message.getRoomId());
 
-       requireRoom(roomId);
+        requireRoom(roomId);
 
         synchronized (getRoomLock(roomId)) {
             Room room = rooms.get(roomId);
@@ -1735,44 +1735,42 @@ room.setWordSelectionEndTime(0);
     }
 
     private void startHintTimers(Room room) {
-    String roomId = room.getRoomId();
-    String expectedDrawerId = room.getCurrentDrawerId();
-    long expectedStartTime = room.getTurnStartTime();
-    int expectedRound = room.getCurrentRound();
+        String roomId = room.getRoomId();
+        String expectedDrawerId = room.getCurrentDrawerId();
+        long expectedStartTime = room.getTurnStartTime();
+        int expectedRound = room.getCurrentRound();
 
-    long drawMillis = room.getDrawTimeSeconds() * 1000L;
-    long firstHintTime = expectedStartTime + Math.round(drawMillis / 3.0);
-    long secondHintTime = expectedStartTime + Math.round((drawMillis * 2) / 3.0);
-    long now = System.currentTimeMillis();
+        long drawMillis = room.getDrawTimeSeconds() * 1000L;
+        long firstHintTime = expectedStartTime + Math.round(drawMillis / 3.0);
+        long secondHintTime = expectedStartTime + Math.round((drawMillis * 2) / 3.0);
+        long now = System.currentTimeMillis();
 
-    int revealedCount = room.getRevealedHintIndexes().size();
+        int revealedCount = room.getRevealedHintIndexes().size();
 
-    if (revealedCount < 1) {
-        long delay = Math.max(0, firstHintTime - now);
+        if (revealedCount < 1) {
+            long delay = Math.max(0, firstHintTime - now);
 
-        scheduler.schedule(() -> revealScheduledHint(
-                        roomId,
-                        expectedDrawerId,
-                        expectedStartTime,
-                        expectedRound),
-                delay,
-                TimeUnit.MILLISECONDS
-        );
+            scheduler.schedule(() -> revealScheduledHint(
+                    roomId,
+                    expectedDrawerId,
+                    expectedStartTime,
+                    expectedRound),
+                    delay,
+                    TimeUnit.MILLISECONDS);
+        }
+
+        if (revealedCount < 2) {
+            long delay = Math.max(0, secondHintTime - now);
+
+            scheduler.schedule(() -> revealScheduledHint(
+                    roomId,
+                    expectedDrawerId,
+                    expectedStartTime,
+                    expectedRound),
+                    delay,
+                    TimeUnit.MILLISECONDS);
+        }
     }
-
-    if (revealedCount < 2) {
-        long delay = Math.max(0, secondHintTime - now);
-
-        scheduler.schedule(() -> revealScheduledHint(
-                        roomId,
-                        expectedDrawerId,
-                        expectedStartTime,
-                        expectedRound),
-                delay,
-                TimeUnit.MILLISECONDS
-        );
-    }
-}
 
     private void revealScheduledHint(
             String roomId,
@@ -1933,66 +1931,63 @@ room.setWordSelectionEndTime(0);
     }
 
     private Room getRoomFromStorage(String roomId) {
-    Room room = rooms.get(roomId);
+        Room room = rooms.get(roomId);
 
-    if (room != null) {
-        return room;
+        if (room != null) {
+            return room;
+        }
+
+        room = roomRedisRepository.findById(roomId).orElse(null);
+
+        if (room != null) {
+            rooms.putIfAbsent(roomId, room);
+            roomLocks.putIfAbsent(roomId, new Object());
+
+            Room restoredRoom = rooms.get(roomId);
+            recoverRoomTimers(restoredRoom);
+            return restoredRoom;
+        }
+        return null;
     }
-
-    room = roomRedisRepository.findById(roomId).orElse(null);
-
-    if (room != null) {
-        rooms.putIfAbsent(roomId, room);
-        roomLocks.putIfAbsent(roomId, new Object());
-
-        Room restoredRoom = rooms.get(roomId);
-        recoverRoomTimers(restoredRoom);
-        return restoredRoom;
-    }
-    return null;
-}
-
 
     private void recoverRoomTimers(Room room) {
-    if (room == null) {
-        return;
+        if (room == null) {
+            return;
+        }
+
+        if (room.getGameState() == GameState.STARTING) {
+            startCountdown(room.getRoomId());
+            return;
+        }
+
+        if (room.getTurnPhase() == TurnPhase.WORD_SELECTION) {
+            startWordSelectionTimer(room.getRoomId());
+            return;
+        }
+
+        if (room.getTurnPhase() == TurnPhase.DRAWING) {
+            startHintTimers(room);
+            startDrawingTimer(room);
+            return;
+        }
+
+        boolean activeRound = room.getGameState() == GameState.ROUND_1
+                || room.getGameState() == GameState.ROUND_2
+                || room.getGameState() == GameState.ROUND_3;
+
+        if (activeRound && room.getTurnPhase() == null) {
+            scheduler.schedule(
+                    () -> continueAfterTurnReveal(room.getRoomId()),
+                    0,
+                    TimeUnit.MILLISECONDS);
+        }
     }
 
-    if (room.getGameState() == GameState.STARTING) {
-        startCountdown(room.getRoomId());
-        return;
+    private Room requireRoom(String roomId) {
+        Room room = getRoomFromStorage(roomId);
+        if (room == null) {
+            throw new RuntimeException("Room not found with ID: " + roomId);
+        }
+        return room;
     }
-
-    if (room.getTurnPhase() == TurnPhase.WORD_SELECTION) {
-        startWordSelectionTimer(room.getRoomId());
-        return;
-    }
-
-    if (room.getTurnPhase() == TurnPhase.DRAWING) {
-        startHintTimers(room);
-        startDrawingTimer(room);
-        return;
-    }
-
-    boolean activeRound =
-            room.getGameState() == GameState.ROUND_1
-            || room.getGameState() == GameState.ROUND_2
-            || room.getGameState() == GameState.ROUND_3;
-
-    if (activeRound && room.getTurnPhase() == null) {
-        scheduler.schedule(
-                () -> continueAfterTurnReveal(room.getRoomId()),
-                0,
-                TimeUnit.MILLISECONDS
-        );
-    }
-}
-
-private Room requireRoom(String roomId) {
-    Room room = getRoomFromStorage(roomId);
-    if (room == null) {
-        throw new RuntimeException("Room not found with ID: " + roomId);
-    }
-    return room;
-}
 }
