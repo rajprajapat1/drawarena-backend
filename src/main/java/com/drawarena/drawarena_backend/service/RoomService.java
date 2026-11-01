@@ -1528,11 +1528,11 @@ public class RoomService {
         return leaderboard;
     }
 
-    private String buildWordPattern(String word, List<Integer> revealedIndexes) {
+    private String buildWordPattern(
+            String word,
+            List<Integer> revealedIndexes) {
 
-        if (word == null
-                ||
-                word.isBlank()) {
+        if (word == null || word.isBlank()) {
             return null;
         }
 
@@ -1542,14 +1542,23 @@ public class RoomService {
 
             char ch = word.charAt(i);
 
+            // Preserve spaces between separate words
+            if (Character.isWhitespace(ch)) {
+                pattern.append("   ");
+                continue;
+            }
+
+            // Add spacing between letters
+            if (i > 0 && !Character.isWhitespace(word.charAt(i - 1))) {
+                pattern.append(" ");
+            }
+
             if (Character.isLetterOrDigit(ch)) {
 
-                if (revealedIndexes != null
-                        &&
+                if (revealedIndexes != null &&
                         revealedIndexes.contains(i)) {
 
-                    pattern.append(
-                            Character.toUpperCase(ch));
+                    pattern.append(Character.toUpperCase(ch));
 
                 } else {
 
@@ -1559,11 +1568,6 @@ public class RoomService {
             } else {
 
                 pattern.append(ch);
-            }
-
-            if (i < word.length() - 1) {
-
-                pattern.append(" ");
             }
         }
 
@@ -1717,7 +1721,7 @@ public class RoomService {
             }
         }
 
-        if (hiddenIndexes.size() <= 2) {
+        if (hiddenIndexes.size() <= 1) {
             return;
         }
 
@@ -1735,38 +1739,40 @@ public class RoomService {
     }
 
     private void startHintTimers(Room room) {
+
         String roomId = room.getRoomId();
         String expectedDrawerId = room.getCurrentDrawerId();
         long expectedStartTime = room.getTurnStartTime();
         int expectedRound = room.getCurrentRound();
 
         long drawMillis = room.getDrawTimeSeconds() * 1000L;
-        long firstHintTime = expectedStartTime + Math.round(drawMillis / 3.0);
-        long secondHintTime = expectedStartTime + Math.round((drawMillis * 2) / 3.0);
-        long now = System.currentTimeMillis();
+
+        int hintCount = switch (room.getDrawTimeSeconds()) {
+            case 60 -> 2;
+            case 80 -> 3;
+            case 100 -> 4;
+            case 120 -> 5;
+            default -> 2;
+        };
+
+        long hintInterval = drawMillis / (hintCount + 1);
 
         int revealedCount = room.getRevealedHintIndexes().size();
 
-        if (revealedCount < 1) {
-            long delay = Math.max(0, firstHintTime - now);
+        for (int i = revealedCount; i < hintCount; i++) {
 
-            scheduler.schedule(() -> revealScheduledHint(
-                    roomId,
-                    expectedDrawerId,
-                    expectedStartTime,
-                    expectedRound),
-                    delay,
-                    TimeUnit.MILLISECONDS);
-        }
+            long hintTime = expectedStartTime + hintInterval * (i + 1);
 
-        if (revealedCount < 2) {
-            long delay = Math.max(0, secondHintTime - now);
+            long delay = Math.max(
+                    0,
+                    hintTime - System.currentTimeMillis());
 
-            scheduler.schedule(() -> revealScheduledHint(
-                    roomId,
-                    expectedDrawerId,
-                    expectedStartTime,
-                    expectedRound),
+            scheduler.schedule(
+                    () -> revealScheduledHint(
+                            roomId,
+                            expectedDrawerId,
+                            expectedStartTime,
+                            expectedRound),
                     delay,
                     TimeUnit.MILLISECONDS);
         }

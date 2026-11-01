@@ -19,6 +19,6 @@ public class CreateRoomRequest {
     private int maxPlayers;
 
     private GameMode gameMode;
-    private int drawTimeSeconds;
+    private int drawTimeSeconds = 60;
     private String avatar;
 }
